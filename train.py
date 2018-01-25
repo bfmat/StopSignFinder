@@ -98,7 +98,7 @@ print(model.summary())
 model.fit(
     x=np.array(image_list),
     y=np.array(label_list),
-    epochs=500,
+    epochs=100,
     batch_size=32,
     validation_split=0.2
 )
