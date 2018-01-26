@@ -35,8 +35,11 @@ model = load_model(full_model_path)
 
 # Create parameters for the blob detector that will be used to find hot spots on the prediction map
 parameters = cv2.SimpleBlobDetector_Params()
-parameters.minThreshold = 20
-parameters.maxThreshold = 100
+parameters.filterByCircularity = False
+parameters.filterByConvexity = False
+parameters.filterByInertia = False
+parameters.filterByColor = False
+parameters.minArea = 5
 # Create the blob detector with the above parameters
 blob_detector = cv2.SimpleBlobDetector_create(parameters)
 
@@ -78,13 +81,18 @@ while True:
     # Convert the floating-point array to unsigned 8-bit integers, multiplying it by 255 to scale it into the range of 0
     # to 255, instead of 0 to 1
     predictions_integer = np.array(predictions_row_arranged * 255, dtype=np.uint8)
+    # Upscale the heat map so it can be blurred more effectively
+    heat_map_large = cv2.resize(predictions_integer, (640, 360))
+    # Blur the scaled heat map using a median filter so that large blobs of pixels will be blurred and more circular,
+    # and noise will be greatly reduced
+    heat_map_blurred = cv2.medianBlur(heat_map_large, 15)
 
     # Find blobs in the heat map, which will be located around the location of the stop signs
     blob_key_points = blob_detector.detect(predictions_integer)
     # Convert the key points to tuple positions
     blob_positions = [key_point.pt for key_point in blob_key_points]
     # Convert the points to comma-separated values that each make up one line
-    positions_comma_separated = [position[0] + ',' + position[1] for position in blob_positions]
+    positions_comma_separated = [str(position[0]) + ',' + str(position[1]) for position in blob_positions]
     # Open a temporary file in the temp folder to write to
     with open(SIGN_TEMP_FILE_PATH, 'w') as temp_file:
         # Print each of the comma-separated lines to the file
