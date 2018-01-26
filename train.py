@@ -4,6 +4,7 @@ import sys
 
 import numpy as np
 from scipy.misc import imread
+from skimage.util import view_as_blocks
 
 from .model import get_model
 
@@ -13,26 +14,26 @@ from .model import get_model
 
 
 # Check that the number of command line arguments is correct
-if len(sys.argv) != 3:
-    print('Usage:', sys.argv[0], '<trained model path> <image folder>')
+if len(sys.argv) != 4:
+    print('Usage:', sys.argv[0], '<trained model path> <positive image folder> <negative image folder>')
     sys.exit()
 
 # Get the provided arguments
 model_path = sys.argv[1]
-image_folder = sys.argv[2]
+positive_image_folder = sys.argv[2]
+negative_image_folder = sys.argv[3]
 
 # Create lists to hold the images and examples
 image_list = []
 label_list = []
 
-# For each of the files in the image directory
-image_names = os.listdir(image_folder)
-for image_name in image_names:
+# For each of the files in the positive image directory
+for image_name in os.listdir(positive_image_folder):
     # Get the image's horizontal stop sign position
     # Names should be in the format 'x[horizontal position]_y[vertical position]_[UUID].jpg'
     stop_sign_position = int(image_name.split('_')[0][1:])
-    # Load the image from disk with its full path
-    image_path = os.path.expanduser(image_folder + '/' + image_name)
+    # Load the image and the corresponding window size from disk with its full path
+    image_path = os.path.expanduser(positive_image_folder + '/' + image_name)
     image = imread(image_path)
     # Get the window size, which is the height of the image
     window_size = image.shape[0]
@@ -90,6 +91,22 @@ for image_name in image_names:
     label_list.append(1)
     image_list.append(false_example)
     label_list.append(0)
+
+# For each of the files in the negative image directory
+for image_name in os.listdir(negative_image_folder):
+    # Load the image and the corresponding window size from disk with its full path
+    image_path = os.path.expanduser(negative_image_folder + '/' + image_name)
+    image = imread(image_path)
+    # Get the window size, which is the height of the image
+    window_size = image.shape[0]
+    # Slice the image into blocks
+    block_array = view_as_blocks(image, (window_size, window_size, 3))
+    # Convert the 6D array into a list of 3D blocks
+    block_list = [block_4d[0] for block_4d in block_array[0]]
+    # Add all of the slices to the image list
+    image_list += block_list
+    # Add a zero to the label list for every block added to the image list
+    label_list += [0] * len(block_list)
 
 # Instantiate the model and print a summary
 model = get_model(window_size)
