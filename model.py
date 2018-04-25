@@ -19,22 +19,21 @@ def get_model(window_size):
     # Two convolutional layers
     model.add(Conv2D(
         input_shape=(window_size, window_size, 3),
-        kernel_size=2,
-        filters=8,
-        strides=2,
+        kernel_size=4,
+        filters=16,
         activation=activation
     ))
 
     model.add(Conv2D(
-        kernel_size=2,
+        kernel_size=3,
         filters=8,
-        strides=2,
         activation=activation
     ))
 
     # Fully connected layers
     model.add(Flatten())
-    model.add(Dense(16, activation=activation))
+    model.add(Dense(64, activation=activation))
+    model.add(Dense(8, activation=activation))
 
     # Sigmoid activation is used for the last layer because its outputs are in the range of 0 to 1
     model.add(Dense(1, activation='sigmoid'))
