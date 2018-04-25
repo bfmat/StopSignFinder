@@ -23,10 +23,14 @@ def get_model(window_size):
         filters=16,
         activation=activation
     ))
-
     model.add(Conv2D(
         kernel_size=3,
-        filters=8,
+        filters=64,
+        activation=activation
+    ))
+    model.add(Conv2D(
+        kernel_size=2,
+        filters=64,
         activation=activation
     ))
 
